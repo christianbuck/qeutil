@@ -42,7 +42,7 @@ class Levenshtein(object):
         """ how to turn s2 into s1 """
         ops = []
         i, j = len(self.Q[0])-1 , len(self.Q)-1
-        while i > 0 and j > 0:
+        while i > 0 or j > 0:
             ops.append(self.Q[j][i][1])
             if ops[-1] == self.INS:
                 i -= 1
