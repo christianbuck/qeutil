@@ -18,6 +18,13 @@ if __name__ == "__main__":
     stemmer = LancasterStemmer() if language == 'english' else SnowballStemmer(language)
 
     for line in iter(sys.stdin.readline, ''):
-        line = line.decode('utf-8')
-        stemmed_words = map(stemmer.stem, line.strip().split())
+        words = line.decode('utf-8').split()
+        stemmed_words = []
+        for w in words:
+            stem = "STEM"
+            try:
+                stem = stemmer.stem(w)
+            except:
+                pass
+            stemmed_words.append(stem)
         sys.stdout.write("%s\n" %(u" ".join(stemmed_words)))
