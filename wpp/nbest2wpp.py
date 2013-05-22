@@ -3,9 +3,16 @@
 import sys
 from math import exp, log1p
 from levenshtein import Levenshtein
-
 # 0 ||| también aumentó en México , donde la economía se ha recuperado después de sufrir una caída en la producción del año pasado .  ||| d: 0 -3.89513 0 0 -2.79308 0 0 lm: -75.4448 w: -23 tm: -25.0151 -31.3059 -14.031 -32.8097 9.99896 ||| -9.75692
 
+
+def smart_open(filename):
+    if not filename:
+        return None
+    if filename.endswith('.gz'):
+        import gzip, io
+        return io.BufferedReader(gzip.open(filename))
+    return open(filename)
 
 class WPP(object):
     def log_add(self, x,y):
@@ -44,14 +51,13 @@ class WPP(object):
         return match
 
 
-    def process_buff(self, curr_id, buff, align):
+    def process_buff(self, curr_id, buff, winning_hyp, align):
         res = []
         if not buff:
             return res
 
-        first_best_id, first_best, first_best_prob = buff[0]
+        first_best_id, first_best = winning_hyp
         assert first_best_id == curr_id
-        first_best = first_best.split()
 
         p_sum = None
         p_sum_exp = 0.0
@@ -77,7 +83,10 @@ class WPP(object):
                     assert hyp[pos] == None
 
             #print curr_id, pos, w, p_w, exp(p_w), p_w - p_sum, exp(p_w - p_sum)
-            res.append(p_w - p_sum)
+            if p_w == None:
+                res.append(-100.)
+            else:
+                res.append(p_w - p_sum)
         return res
 
 
@@ -89,11 +98,20 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-align', action='store_true', help='perform levenshtein alignment')
+    parser.add_argument('-firstbest', help='firstbest translations, one per line')
+    parser.add_argument('-n', help='limit n-best entries to this many', type=int)
+
     args = parser.parse_args(sys.argv[1:])
 
     wpp = WPP()
     buff = []
     curr_id = None
+
+    first_best = []
+    if args.firstbest:
+        first_best = [(linenr, line.decode('utf-8').strip().split()) \
+            for linenr, line in enumerate(open(args.firstbest))]
+
     for linenr, line in enumerate(sys.stdin):
         line = line.decode('utf-8').strip().split('|||')
         #print repr(line[1])
@@ -105,7 +123,11 @@ if __name__ == "__main__":
         # line[1] = line[1].split()
         if curr_id == None or curr_id != line[0]:
             if curr_id != None:
-                res = wpp.process_buff(curr_id, buff, align=args.align)
+                assert not first_best or curr_id < len(first_best)
+                fb = None if not first_best else first_best[curr_id]
+                if args.n and len(buff) > args.n:
+                    buff = buff[:args.n]
+                res = wpp.process_buff(curr_id, buff, fb, align=args.align)
                 print " ".join(map(str, res))
 
             buff = []
