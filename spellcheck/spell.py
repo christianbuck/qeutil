@@ -3,6 +3,7 @@ import re
 import sys
 import Levenshtein
 from operator import itemgetter
+import math
 
 # from norvig.com
 def tokens(text):
@@ -20,7 +21,7 @@ class SpellChecker(object):
     def tokens(self, line):
         return line.strip().split()
 
-    def close_words(self, word, max_distance=1):
+    def close_words(self, word, max_distance=2):
         candidates = []
         for w in self.words:
             distance = Levenshtein.distance(w, word)
@@ -41,16 +42,17 @@ def write_hypergraph(sentence, filehandle):
     for word_idx, possibilities in enumerate(sentence):
         filehandle.write("%d\n" %(len(possibilities)))
         for word, distance, count in possibilities:
-            filehandle.write("[%d] %s ||| Distance=%d Count=%d\n"
-                             %(word_idx, word, distance, count))
+            filehandle.write("[%d] %s ||| Distance=%d LogCount=%f\n"
+                             %(word_idx, word, distance, math.log(count)))
     filehandle.write("1\n")
-    filehandle.write("[%d] <s> ||| \n" %(n_vertices-2))
+    filehandle.write("[%d] </s> ||| \n" %(n_vertices-2))
 
 
 if __name__ == '__main__':
-    spell_checker = SpellChecker('vocab.txt')
+    spell_checker = SpellChecker('english.vocab')
     for line in sys.stdin:
         line = line.strip()
         sentence = tokens(line)
         sentence = map(spell_checker.close_words, sentence)
+        #print sentence
         write_hypergraph(sentence, sys.stdout)
