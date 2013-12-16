@@ -4,7 +4,9 @@ import sys
 from math import exp, log1p
 from levenshtein import Levenshtein
 import re
-# 0 ||| también aumentó en México , donde la economía se ha recuperado después de sufrir una caída en la producción del año pasado .  ||| d: 0 -3.89513 0 0 -2.79308 0 0 lm: -75.4448 w: -23 tm: -25.0151 -31.3059 -14.031 -32.8097 9.99896 ||| -9.75692
+# 0 ||| también aumentó en México , donde la economía se ha recuperado después de \
+#  sufrir una caída en la producción del año pasado .  ||| \
+# d: 0 -3.89513 0 0 -2.79308 0 0 lm: -75.4448 w: -23 tm: -25.0151 -31.3059 -14.031 -32.8097 9.99896 ||| -9.75692
 
 
 def smart_open(filename):
@@ -123,6 +125,7 @@ if __name__ == "__main__":
             for linenr, line in enumerate(open(args.firstbest))]
 
     for linenr, line in enumerate(sys.stdin):
+        # remove segmentation info
         line = re.sub(" \|\d+-\d+\| "," ",line )
         line = line.decode('utf-8').strip().split('|||')
         #print repr(line[1])
