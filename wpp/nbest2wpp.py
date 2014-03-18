@@ -111,6 +111,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', help='limit n-best entries to this many', type=int)
     parser.add_argument('-skip', help='skip this many lines', type=int)
     parser.add_argument('-progress', action='store_true', help='more output')
+    parser.add_argument('-nocase', action='store_true', help='ignore case')
 
 
     args = parser.parse_args(sys.argv[1:])
@@ -121,17 +122,22 @@ if __name__ == "__main__":
 
     first_best = []
     if args.firstbest:
-        first_best = [(linenr, line.decode('utf-8').strip().split()) \
-            for linenr, line in enumerate(open(args.firstbest))]
+        fb_lines = [line.decode('utf-8').strip() for line in open(args.firstbest)]
+        if args.nocase:
+            fb_lines = [line.lower() for line in fb_lines]
+        first_best = [(linenr, line.split()) \
+            for linenr, line in enumerate(fb_lines)]
 
     for linenr, line in enumerate(sys.stdin):
         # remove segmentation info
         line = re.sub(" \|\d+-\d+\| "," ",line )
-        line = line.decode('utf-8').strip().split('|||')
+        line = line.decode('utf-8').strip().split('|||')[:4]
         #print repr(line[1])
 
         line[0] = int(line[0])
         line[1] = u"%s" %line[1]
+        if args.nocase:
+            line[1] = line[1].lower()
         line[-1] = float(line[-1])
         line.pop(2)
         # line[1] = line[1].split()
