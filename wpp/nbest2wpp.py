@@ -98,7 +98,18 @@ class WPP(object):
                 res.append(p_w - p_sum)
         return res
 
-
+def unescape(s):
+    s = s.replace('&amp;','&')
+    s = s.replace('&#124;','|')
+    s = s.replace('&lt;','<')
+    s = s.replace('&gt;','>')
+    s = s.replace('&apos;','\'')
+    s = s.replace('&quot;','"')
+    s = s.replace('&#91;','[')
+    s = s.replace('&#93;',']')
+    s = s.replace(' @-@ ','-')
+    #print s.encode('utf-8')
+    return s
 
 if __name__ == "__main__":
     """ default mode is to read an nbest list as produced by moses and print
@@ -112,7 +123,7 @@ if __name__ == "__main__":
     parser.add_argument('-skip', help='skip this many lines', type=int)
     parser.add_argument('-progress', action='store_true', help='more output')
     parser.add_argument('-nocase', action='store_true', help='ignore case')
-
+    parser.add_argument('-unescape', action='store_true', help='perform halfway detokenization on n-best list')
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -138,6 +149,8 @@ if __name__ == "__main__":
         line[1] = u"%s" %line[1]
         if args.nocase:
             line[1] = line[1].lower()
+        if args.unescape:
+            line[1] = unescape(line[1])
         line[-1] = float(line[-1])
         line.pop(2)
         # line[1] = line[1].split()
